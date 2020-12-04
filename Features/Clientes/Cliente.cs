@@ -1,7 +1,6 @@
 ﻿using System;
 using Features.Core;
 using FluentValidation;
-using FluentValidation.Results;
 
 namespace Features.Clientes
 {
