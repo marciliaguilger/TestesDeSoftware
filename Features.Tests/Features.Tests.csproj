@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="32.0.1" />
+    <PackageReference Include="fluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="moq" Version="4.15.2" />
     <PackageReference Include="MOQ.automock" Version="2.1.0" />
@@ -18,10 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Features\Features.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="06 - AutoMock\FluentAssertions\" />
   </ItemGroup>
 
 </Project>
