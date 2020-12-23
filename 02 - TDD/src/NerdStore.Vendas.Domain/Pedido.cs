@@ -1,8 +1,7 @@
-﻿using System;
+﻿using NerdStore.Core.DomainObjects;
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 
 namespace NerdStore.Vendas.Domain
 {
@@ -17,6 +16,9 @@ namespace NerdStore.Vendas.Domain
     }
     public class Pedido
     {
+        public static int MAX_UNIDADES_ITEM => 15;
+        public static int MIN_UNIDADES_ITEM => 1;
+
         protected Pedido()
         {
             _pedidoItems = new List<PedidoItem>();
@@ -37,6 +39,9 @@ namespace NerdStore.Vendas.Domain
 
         public void AdicionarItem(PedidoItem pedidoItem)
         {
+            if(pedidoItem.Quantidade > MAX_UNIDADES_ITEM) throw new DomainException($"Máximo de {MAX_UNIDADES_ITEM} unidades por produto");
+            if(pedidoItem.Quantidade < MIN_UNIDADES_ITEM) throw new DomainException($"Mínima de {MIN_UNIDADES_ITEM} unidades por produto");
+            
             if(_pedidoItems.Any(p=> p.ProdutoId == pedidoItem.ProdutoId))
             {
                 var itemExistente = _pedidoItems.FirstOrDefault(p => p.ProdutoId == pedidoItem.ProdutoId);
@@ -74,6 +79,9 @@ namespace NerdStore.Vendas.Domain
     {
         public PedidoItem(Guid produtoId, string produtoNome, int quantidade, decimal valorUnitario)
         {
+            if (quantidade < Pedido.MIN_UNIDADES_ITEM) throw new DomainException($"Mínima de {Pedido.MIN_UNIDADES_ITEM} unidades por produto");
+
+
             ProdutoId = produtoId;
             ProdutoNome = produtoNome;
             Quantidade = quantidade;
