@@ -30,16 +30,18 @@ namespace NerdStore.Vendas.Application.Commands
             pedido.AdicionarItem(pedidoItem);
 
             _pedidoRepository.Adicionar(Pedido.PedidoFactory.NovoPedidoRascunho(message.ClienteId));
-            await _mediator.Publish
-                (new PedidoItemAdicionadoEvent(
-                    pedido.ClienteId,
-                    pedido.Id,
-                    message.ProdutoId,
-                    message.Nome,
-                    message.ValorUnitario,
-                    message.Quantidade), cancellationToken);
 
-            return true;
+            pedido.AdicionarEvento(new PedidoItemAdicionadoEvent(
+                                    pedido.ClienteId,
+                                    pedido.Id,
+                                    message.ProdutoId,
+                                    message.Nome,
+                                    message.ValorUnitario,
+                                    message.Quantidade));
+
+            return await _pedidoRepository.UnitOfWork.Commit();
+
+            //minuto 15: 39
         }
     }
 }
