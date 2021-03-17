@@ -14,28 +14,46 @@ namespace NerdStore.Vendas.Application.Tests.Pedidos
 {
     public class PedidoCommandHandlerTests
     {
+        //a classe de teste é criada a cada teste rodado, não mantendo estado. o construtor é chamado a cada teste.
+        //utilizar o fixture para manter o estado de um objeto se for desejado.
+
+        private readonly Guid _clienteId;
+        private readonly Guid _produtoId;
+        private readonly Pedido _pedido;
+        private readonly AutoMocker _mocker;
+        private readonly PedidoCommandHandler _pedidoHandler;
+
+        public PedidoCommandHandlerTests()
+        {
+            _mocker = new AutoMocker();
+            _pedidoHandler = _mocker.CreateInstance<PedidoCommandHandler>();
+            _clienteId = Guid.NewGuid();
+            _produtoId = Guid.NewGuid();
+            _pedido = Pedido.PedidoFactory.NovoPedidoRascunho(_clienteId);
+        }
+
         //intenção de adicionar um item ao carrinho
         [Fact(DisplayName = "Adicionar Item Novo Pedido com Sucesso")]
         [Trait("Categoria", "Vendas - Pedido Command Handler")]
         public async Task AdicionarItem_NovoPedido_DeveExecutarComSucesso()
         {
             //Arrange
-            var pedidoCommand = new AdicionarItemPedidoCommand(Guid.NewGuid(),
-                Guid.NewGuid(), "Produto Teste", 2, 100);
-            
-            //implementação de CQRS via commandHandler -> recebe injeções de dependencia (repositorio e mediator-entrega do comando para o comand handler)
-            var mocker = new AutoMocker();
-            var pedidoHandler = mocker.CreateInstance<PedidoCommandHandler>();
+            var pedidoCommand = new AdicionarItemPedidoCommand(_clienteId,
+                _produtoId, "Produto Teste", 2, 100);
 
-            mocker.GetMock<IPedidoRepository>().Setup(r => r.UnitOfWork.Commit()).Returns(Task.FromResult(true));
+            //implementação de CQRS via commandHandler -> recebe injeções de dependencia (repositorio e mediator-entrega do comando para o comand handler)
+            //var mocker = new AutoMocker();
+            //var pedidoHandler = mocker.CreateInstance<PedidoCommandHandler>();
+
+            _mocker.GetMock<IPedidoRepository>().Setup(r => r.UnitOfWork.Commit()).Returns(Task.FromResult(true));
 
             //Act
-            var result = await pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
+            var result = await _pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
 
             //Assert
             Assert.True(result);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.Adicionar(It.IsAny<Pedido>()), Times.Once);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.UnitOfWork.Commit(), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.Adicionar(It.IsAny<Pedido>()), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.UnitOfWork.Commit(), Times.Once);
             //mocker.GetMock<IMediator>().Verify(r => r.Publish(It.IsAny<INotification>(),CancellationToken.None), Times.Once);
 
 
@@ -46,30 +64,25 @@ namespace NerdStore.Vendas.Application.Tests.Pedidos
         public async Task AdicionarItem_NovoItemPedidoRascunho_DeveExecutarComSucesso()
         {
             //arrange
-            var clienteId = Guid.NewGuid();
 
-            var pedido = Pedido.PedidoFactory.NovoPedidoRascunho(clienteId);
             var pedidoItemExistente = new PedidoItem(Guid.NewGuid(), "Produto xpto", 2, 100);
-            pedido.AdicionarItem(pedidoItemExistente);
+            _pedido.AdicionarItem(pedidoItemExistente);
 
-            var pedidoCommand = new AdicionarItemPedidoCommand(clienteId, Guid.NewGuid(), "Produto Teste", 2, 100);
+            var pedidoCommand = new AdicionarItemPedidoCommand(_clienteId, Guid.NewGuid(), "Produto Teste", 2, 100);
 
-            var mocker = new AutoMocker();
-            var pedidoHandler = mocker.CreateInstance<PedidoCommandHandler>();
+            _mocker.GetMock<IPedidoRepository>()
+                .Setup(r => r.ObterPedidoRascunhoPorClienteId(_clienteId)).Returns(Task.FromResult(_pedido));
 
-            mocker.GetMock<IPedidoRepository>()
-                .Setup(r => r.ObterPedidoRascunhoPorClienteId(clienteId)).Returns(Task.FromResult(pedido));
-            
-            mocker.GetMock<IPedidoRepository>().Setup(r => r.UnitOfWork.Commit()).Returns(Task.FromResult(true));
+            _mocker.GetMock<IPedidoRepository>().Setup(r => r.UnitOfWork.Commit()).Returns(Task.FromResult(true));
 
             //Act
-            var result = await pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
+            var result = await _pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
 
             //Assert
             Assert.True(result);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.AdicionarItem(It.IsAny<PedidoItem>()), Times.Once);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.Atualizar(It.IsAny<Pedido>()), Times.Once);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.UnitOfWork.Commit(), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.AdicionarItem(It.IsAny<PedidoItem>()), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.Atualizar(It.IsAny<Pedido>()), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.UnitOfWork.Commit(), Times.Once);
         }
 
         [Fact(DisplayName = "Adicionar Novo Item Pedido Rascunho com Sucesso")]
@@ -77,31 +90,25 @@ namespace NerdStore.Vendas.Application.Tests.Pedidos
         public async Task AdicionarItem_ItemExistenteAoPedidoRascunho_DeveExecutarComSucesso()
         {
             //arrange
-            var clienteId = Guid.NewGuid();
-            var produtoId = Guid.NewGuid();
+            var pedidoItemExistente = new PedidoItem(_produtoId, "Produto Xpto", 2, 100);
+            _pedido.AdicionarItem(pedidoItemExistente);
 
-            var pedido = Pedido.PedidoFactory.NovoPedidoRascunho(clienteId);
-            var pedidoItemExistente = new PedidoItem(produtoId, "Produto Xpto", 2, 100);
-            pedido.AdicionarItem(pedidoItemExistente);
-
-            var pedidoCommand = new AdicionarItemPedidoCommand(clienteId, produtoId, "Produto xpto", 2, 100);
+            var pedidoCommand = new AdicionarItemPedidoCommand(_clienteId, _produtoId, "Produto xpto", 2, 100);
             
-            var mocker = new AutoMocker();
-            var pedidoHandler = mocker.CreateInstance<PedidoCommandHandler>();
 
-            mocker.GetMock<IPedidoRepository>()
-                .Setup(r => r.ObterPedidoRascunhoPorClienteId(clienteId)).Returns(Task.FromResult(pedido));
+            _mocker.GetMock<IPedidoRepository>()
+                .Setup(r => r.ObterPedidoRascunhoPorClienteId(_clienteId)).Returns(Task.FromResult(_pedido));
 
-            mocker.GetMock<IPedidoRepository>().Setup(r => r.UnitOfWork.Commit()).Returns(Task.FromResult(true));
+            _mocker.GetMock<IPedidoRepository>().Setup(r => r.UnitOfWork.Commit()).Returns(Task.FromResult(true));
 
             //act
-            var result = await pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
+            var result = await _pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
 
             //assert
             Assert.True(result);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.AtualizarItem(It.IsAny<PedidoItem>()), Times.Once);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.Atualizar(It.IsAny<Pedido>()), Times.Once);
-            mocker.GetMock<IPedidoRepository>().Verify(r => r.UnitOfWork.Commit(), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.AtualizarItem(It.IsAny<PedidoItem>()), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.Atualizar(It.IsAny<Pedido>()), Times.Once);
+            _mocker.GetMock<IPedidoRepository>().Verify(r => r.UnitOfWork.Commit(), Times.Once);
 
         }
 
@@ -112,15 +119,12 @@ namespace NerdStore.Vendas.Application.Tests.Pedidos
             //arrange
             var pedidoCommand = new AdicionarItemPedidoCommand(Guid.Empty, Guid.Empty, "", 0,0);
 
-            var mocker = new AutoMocker();
-            var pedidoHandler = mocker.CreateInstance<PedidoCommandHandler>();
-
             //act
-            var result = await pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
+            var result = await _pedidoHandler.Handle(pedidoCommand, CancellationToken.None);
 
             //Assert
             Assert.False(result);
-            mocker.GetMock<IMediator>()
+            _mocker.GetMock<IMediator>()
                 .Verify(m => m.Publish(It.IsAny<INotification>(), CancellationToken.None),Times.Exactly(5));
 
         }
