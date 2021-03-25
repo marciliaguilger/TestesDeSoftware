@@ -2,8 +2,6 @@
 using NerdStore.Core.Messages;
 using NerdStore.Vendas.Domain;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NerdStore.Vendas.Application.Commands
 {

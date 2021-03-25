@@ -348,3 +348,6 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/03 - Testes de Integracao/tests/NerdStore.WebApp.Tests/Config
+/03 - Testes de Integracao/tests/NerdStore.WebApp.Tests/NerdStore.WebApp.Tests.csproj
+/03 - Testes de Integracao/tests/NerdStore.WebApp.Tests/UsuarioTests.cs
