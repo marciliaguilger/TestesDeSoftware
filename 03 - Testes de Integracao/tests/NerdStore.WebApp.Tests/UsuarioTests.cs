@@ -2,6 +2,7 @@
 using NerdStore.WebApp.Tests.Config;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
@@ -23,8 +24,35 @@ namespace NerdStore.WebApp.Tests
         [Trait("Categoria", "Integração Web - usuário")]
         public async Task Usuario_RealizarCadastro_DeveExecutarComSucesso()
         {
+            //arrange
             var initialResponse = await _testsFixture.Client.GetAsync("/Identity/Account/Register");
             initialResponse.EnsureSuccessStatusCode();
+            var antiForgeryToken = _testsFixture.ObterAntiForgeryToken(await initialResponse.Content.ReadAsStringAsync());
+
+            var email = "teste2@teste.com";
+
+            var formData = new Dictionary<string, string>
+            {
+                {_testsFixture.AntiForgeryFiedlName, antiForgeryToken },
+                {"Input.Email", email},
+                {"Input.Password", "Teste@123"},
+                {"Input.ConfirmPassword", "Teste@123"},
+            };
+
+            var postRequest = new HttpRequestMessage(HttpMethod.Post, "/Identity/Account/Register")
+            {
+                Content = new FormUrlEncodedContent(formData)
+            };
+
+            //act
+            var postResponse = await _testsFixture.Client.SendAsync(postRequest);
+
+            //assert
+            var responseString = await postResponse.Content.ReadAsStringAsync();
+            
+            postResponse.EnsureSuccessStatusCode();
+            Assert.Contains($"Hello {email}!", responseString);
+
         }
 
     }

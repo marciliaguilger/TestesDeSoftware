@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using FluentValidation.Results;
 using NerdStore.Core.DomainObjects;
 
@@ -14,6 +15,9 @@ namespace NerdStore.Vendas.Domain
         public DateTime DataValidade { get; private set; }
         public bool Ativo { get; private set; }
         public bool Utilizado { get; private set; }
+
+        // EF Rel.
+        public ICollection<Pedido> Pedidos { get; set; }
 
         public Voucher(string codigo, decimal? percentualDesconto, decimal? valorDesconto, int quantidade,
             TipoDescontoVoucher tipoDescontoVoucher, DateTime dataValidade, bool ativo, bool utilizado)

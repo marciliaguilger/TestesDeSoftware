@@ -10,8 +10,8 @@ using NerdStore.Catalogo.Data;
 namespace NerdStore.Catalogo.Data.Migrations
 {
     [DbContext(typeof(CatalogoContext))]
-    [Migration("20190724003649_Initial")]
-    partial class Initial
+    [Migration("20210411164934_Inital")]
+    partial class Inital
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -62,7 +62,8 @@ namespace NerdStore.Catalogo.Data.Migrations
 
                     b.Property<int>("QuantidadeEstoque");
 
-                    b.Property<decimal>("Valor");
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("money");
 
                     b.HasKey("Id");
 

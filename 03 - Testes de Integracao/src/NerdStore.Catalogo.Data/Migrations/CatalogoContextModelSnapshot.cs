@@ -60,7 +60,8 @@ namespace NerdStore.Catalogo.Data.Migrations
 
                     b.Property<int>("QuantidadeEstoque");
 
-                    b.Property<decimal>("Valor");
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("money");
 
                     b.HasKey("Id");
 
