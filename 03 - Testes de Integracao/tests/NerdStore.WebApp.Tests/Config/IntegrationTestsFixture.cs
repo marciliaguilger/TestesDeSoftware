@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Bogus;
+using Microsoft.AspNetCore.Mvc.Testing;
 using NerdStore.WebApp.MVC;
 using System;
 using System.Net.Http;
@@ -16,6 +17,10 @@ namespace NerdStore.WebApp.Tests.Config
     public class IntegrationTestsFixture<TStartup> : IDisposable where TStartup : class
     {
         public string AntiForgeryFiedlName = "__RequestVerificationToken";
+
+        public string UsuarioEmail;
+        public string UsuarioSenha;
+
         public readonly LojaAppFactory<TStartup> Factory;
         public HttpClient Client;
 
@@ -30,6 +35,13 @@ namespace NerdStore.WebApp.Tests.Config
         };
             Factory = new LojaAppFactory<TStartup>();
             Client = Factory.CreateClient(clientOptions); //já olha direto para o servidor da aplição
+        }
+
+        public void GerarUserSenha()
+        {
+            var faker = new Faker("pt_BR");
+            UsuarioEmail = faker.Internet.Email().ToLower();
+            UsuarioSenha = faker.Internet.Password(8, false, "", "@1Ab_");
         }
 
         public string ObterAntiForgeryToken(string htmlBody)
